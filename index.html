@@ -231,7 +231,7 @@
     <script>
     // Service Worker kaydı
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('/edeldepo/sw.js')
             .then(reg => console.log('Service Worker kaydedildi:', reg))
             .catch(err => console.log('Service Worker hatası:', err));
     }

@@ -40,6 +40,9 @@
     <div id="imageModal" class="modal"><img id="modalImage" src="" alt="Büyük resim"></div>
 
     <script>
+        // ⚠️ BURAYA KENDİ RAW URL'NİZİ YAPIŞTIRIN ⚠️
+        const VERI_URL = 'https://raw.githubusercontent.com/mmt8129/edeldepo/refs/heads/main/veri.html';
+        
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('resultsContainer');
         const modal = document.getElementById('imageModal');
@@ -51,26 +54,19 @@
 
         async function loadParts() {
             try {
-                console.log('veri.html yükleniyor...');
-                const response = await fetch('veri.html?t=' + Date.now()); // cache önleme
+                console.log('veri.html yükleniyor (RAW):', VERI_URL);
+                const response = await fetch(VERI_URL + '?t=' + Date.now());
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const htmlText = await response.text();
                 console.log('HTML alındı, uzunluk:', htmlText.length);
+                console.log('İlk 300 karakter:', htmlText.substring(0, 300));
 
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
                 
-                // Daha esnek satır seçimi: önce tbody tr, yoksa table tr
                 let rows = doc.querySelectorAll('tbody tr');
-                if (rows.length === 0) {
-                    rows = doc.querySelectorAll('table tr');
-                    console.log('tbody bulunamadı, table tr kullanılıyor, satır:', rows.length);
-                }
-                if (rows.length === 0) {
-                    // Son çare: tüm tr'leri ara
-                    rows = doc.querySelectorAll('tr');
-                    console.log('table tr de yok, tüm trler deneniyor, satır:', rows.length);
-                }
+                if (rows.length === 0) rows = doc.querySelectorAll('table tr');
+                if (rows.length === 0) rows = doc.querySelectorAll('tr');
                 console.log(`Toplam ${rows.length} satır bulundu.`);
 
                 allParts = [];
@@ -80,29 +76,22 @@
                     const cells = row.querySelectorAll('td');
                     if (cells.length < 5) continue;
 
-                    // --- 1. RESİM ---
                     const imgTag = cells[0]?.querySelector('img');
                     const imageUrl = imgTag ? imgTag.getAttribute('src') : '';
-
-                    // --- 2. PARÇA ADI VE RAF ---
+                    
                     const secondCell = cells[1];
                     const nameLink = secondCell?.querySelector('a');
                     let partName = nameLink ? nameLink.textContent.trim() : '';
-                    if (!partName) continue; // geçersiz satırı atla
+                    if (!partName) continue;
                     
-                    // Raf numarası: link'ten sonraki tüm metin
                     let rackRaw = '';
                     if (secondCell) {
-                        // link'i kaldır, kalan metni al
                         const clone = secondCell.cloneNode(true);
                         const link = clone.querySelector('a');
                         if (link) link.remove();
-                        rackRaw = clone.textContent.trim();
-                        // &nbsp; ve fazla boşlukları temizle
-                        rackRaw = rackRaw.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+                        rackRaw = clone.textContent.trim().replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
                     }
                     
-                    // --- 5. DURUM (Tasfiye/Üretimde) ---
                     const statusCell = cells[4] ? cells[4].textContent.trim() : '';
                     const isStatusOut = statusCell.includes('Tasfiye') || statusCell.includes('Üretimde') || statusCell === '';
 
@@ -131,7 +120,7 @@
                 performSearch();
                 
                 if (parsedCount === 0) {
-                    resultsContainer.innerHTML = `<div class="info-message">⚠️ Hiç parça bulunamadı. Lütfen veri.html dosyasının formatını kontrol edin.</div>`;
+                    resultsContainer.innerHTML = `<div class="info-message">⚠️ Hiç parça bulunamadı. HTML içinde <tr> etiketi var mı? İlk 300 karakteri console'da kontrol edin.</div>`;
                 }
             } catch (error) {
                 console.error('Veri yüklenirken hata:', error);

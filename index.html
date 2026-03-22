@@ -23,7 +23,6 @@
             overflow: hidden;
         }
 
-        /* Sabit üst kısım */
         .header {
             position: sticky;
             top: 0;
@@ -49,12 +48,11 @@
             opacity: 0.3;
         }
 
-        /* Arama kutusu alanı (sabit) */
         .search-area {
             background: #f5f7fb;
             padding: 16px 16px 8px 16px;
             position: sticky;
-            top: 85px; /* header yüksekliğine göre ayarlandı */
+            top: 85px;
             z-index: 10;
         }
 
@@ -88,7 +86,6 @@
             box-shadow: 0 4px 12px rgba(25,118,210,0.15);
         }
 
-        /* Kaydırılabilir sonuçlar listesi */
         .results-container {
             flex: 1;
             overflow-y: auto;
@@ -96,7 +93,6 @@
             margin-top: 8px;
         }
 
-        /* Parça kartları */
         .part-card {
             background: white;
             border-radius: 20px;
@@ -146,7 +142,6 @@
             color: #b91c1c;
         }
 
-        /* Yükleniyor / Hata */
         .info-message {
             text-align: center;
             padding: 40px 20px;
@@ -154,13 +149,6 @@
             font-size: 15px;
         }
 
-        .loading {
-            display: flex;
-            justify-content: center;
-            padding: 40px;
-        }
-
-        /* Modal (büyük resim için) */
         .modal {
             display: none;
             position: fixed;
@@ -184,7 +172,6 @@
             display: flex;
         }
 
-        /* küçük ekran iyileştirmeleri */
         @media (max-width: 480px) {
             .header h1 { font-size: 24px; }
             .part-image { width: 55px; height: 55px; }
@@ -208,38 +195,31 @@
         <div class="info-message">📦 Veri yükleniyor, lütfen bekleyin...</div>
     </div>
 
-    <!-- Büyük resim göstermek için modal -->
     <div id="imageModal" class="modal">
         <img id="modalImage" src="" alt="Büyük resim">
     </div>
 
     <script>
-        // ---------- 1. VERİYI HTML'DEN ÇEK VE AYIKLA ----------
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('resultsContainer');
         const modal = document.getElementById('imageModal');
         const modalImg = document.getElementById('modalImage');
 
-        let allParts = [];     // tüm parçalar bu dizide tutulacak
+        let allParts = [];
         let isLoading = true;
 
-        // Modal kapatma
         modal.addEventListener('click', () => {
             modal.classList.remove('show');
         });
 
-        // HTML dosyasını fetch et ve işle
         async function loadPartsFromHtml() {
             try {
                 const response = await fetch('veri.html');
                 if (!response.ok) throw new Error('veri.html bulunamadı');
                 const htmlText = await response.text();
 
-                // Geçici bir DOM oluştur, içine HTML'i yükle
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
-
-                // Tüm <tr> satırlarını bul (tbody içindeki)
                 const rows = doc.querySelectorAll('tbody tr');
                 console.log(`Toplam ${rows.length} satır bulundu.`);
 
@@ -249,34 +229,42 @@
                     const cells = row.querySelectorAll('td');
                     if (cells.length < 5) continue;
 
-                    // 1. hücre: resim linki (img src)
+                    // 1. hücre: resim
                     const imgTag = cells[0]?.querySelector('img');
                     const imageUrl = imgTag ? imgTag.getAttribute('src') : '';
 
-                    // 2. hücre: parça adı (link içindeki text)
-                    const nameLink = cells[1]?.querySelector('a');
-                    let partName = '';
-                    if (nameLink) {
-                        partName = nameLink.textContent.trim();
-                    }
-
-                    // 3. hücre: açıklama (şimdilik kullanmayacağız ama atlayabiliriz)
-                    // 4. hücre: adet (kullanmayacağız)
-                    // 5. hücre: RAF NUMARASI (veya Tasfiye/Üretimde durumu)
-                    let rawRack = cells[4]?.innerHTML?.trim() || '';
-                    // &nbsp; veya boşluk temizliği
-                    rawRack = rawRack.replace(/&nbsp;/g, ' ').trim();
+                    // 2. hücre: parça adı ve raf numarası
+                    const secondCell = cells[1];
+                    const nameLink = secondCell?.querySelector('a');
+                    let partName = nameLink ? nameLink.textContent.trim() : '';
                     
+                    // Raf numarasını al: &nbsp;'ten sonraki kısım
                     let rackNumber = '';
                     let isOutOfStock = false;
                     
-                    // Eğer içinde "Tasfiye" veya "Üretimde" gibi durum varsa, bu depoda yok anlamına gelir.
-                    if (rawRack.includes('Tasfiye') || rawRack.includes('&#xDC;retimde') || rawRack === '' || rawRack === '&nbsp;') {
+                    // 2. hücrenin tüm metnini al, &nbsp; ve boşlukları temizle
+                    const fullSecondText = secondCell ? secondCell.textContent.trim() : '';
+                    // Parça adı linkte, geri kalan kısımda raf veya durum olabilir
+                    const afterLink = fullSecondText.replace(partName, '').trim();
+                    // &nbsp; varsa temizle ve kalanı al
+                    let rackRaw = afterLink.replace(/&nbsp;/g, '').trim();
+                    
+                    // 5. hücre: durum (Tasfiye/Üretimde)
+                    const statusCell = cells[4] ? cells[4].textContent.trim() : '';
+                    const isStatusOut = statusCell.includes('Tasfiye') || statusCell.includes('Üretimde') || statusCell === '';
+                    
+                    // Raf numarası kontrolü
+                    if (rackRaw !== '' && !isStatusOut) {
+                        rackNumber = rackRaw;
+                        isOutOfStock = false;
+                    } else if (rackRaw !== '' && isStatusOut) {
+                        // Raf var ama durum tasfiye/üretimde -> depoda yok say
+                        rackNumber = rackRaw;
                         isOutOfStock = true;
-                        rackNumber = 'Depoda yok';
                     } else {
-                        // Raf kodu olarak sakla (ör: "03A2", "27B2" vb.)
-                        rackNumber = rawRack;
+                        // Raf yok
+                        rackNumber = 'Depoda yok';
+                        isOutOfStock = true;
                     }
 
                     if (partName && partName !== '') {
@@ -289,9 +277,8 @@
                     }
                 }
 
-                console.log(`${allParts.length} parça başarıyla yüklendi.`);
+                console.log(`${allParts.length} parça başarıyla yüklendi. Örnek:`, allParts.slice(0, 3));
                 isLoading = false;
-                // İlk aramayı tetikle (boş input ile tüm sonuçları gösterme, beklet)
                 performSearch();
             } catch (error) {
                 console.error('Veri yüklenirken hata:', error);
@@ -300,7 +287,6 @@
             }
         }
 
-        // Arama yap ve listeyi güncelle
         function performSearch() {
             if (isLoading) return;
             const query = searchInput.value.trim().toLowerCase();
@@ -310,19 +296,16 @@
                 filtered = allParts.filter(part => part.ad.toLowerCase().includes(query));
             }
 
-            // Sonuçları göster (hepsini göster, fazla ise scroll yapılır, limit yok)
             if (filtered.length === 0) {
                 resultsContainer.innerHTML = `<div class="info-message">🔍 "${searchInput.value}" ile eşleşen parça bulunamadı.</div>`;
                 return;
             }
 
-            // HTML oluştur
             let html = '';
             for (let part of filtered) {
                 const rackClass = part.stokDurumu === 'yok' ? 'out-of-stock' : '';
                 const rackHtml = `<span class="part-rack ${rackClass}">${escapeHtml(part.raf)}</span>`;
                 
-                // resim yoksa placeholder
                 const imgSrc = part.resim && part.resim !== '' ? part.resim : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"%3E%3Cpath d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/%3E%3C/svg%3E';
                 
                 html += `
@@ -337,23 +320,20 @@
             }
             resultsContainer.innerHTML = html;
 
-            // Resimlere tıklama olayı ekle (büyük resim göster)
             document.querySelectorAll('.part-image').forEach(img => {
                 img.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const fullUrl = img.getAttribute('data-fullimg');
-                    if (fullUrl && fullUrl !== '') {
+                    if (fullUrl && fullUrl !== '' && !fullUrl.includes('data:image')) {
                         modalImg.src = fullUrl;
                         modal.classList.add('show');
                     } else {
-                        // placeholder veya yoksa büyütme yapma
                         alert('Bu parçaya ait büyük resim bulunmuyor.');
                     }
                 });
             });
         }
 
-        // XSS koruması için basit escape
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -361,15 +341,10 @@
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
             });
         }
 
-        // Dinamik arama: input her değiştiğinde çalıştır
         searchInput.addEventListener('input', performSearch);
-
-        // Sayfa yüklendiğinde veriyi çek
         loadPartsFromHtml();
     </script>
 </body>

@@ -228,8 +228,7 @@
         loadParts();
     </script>
 
-    <script>
-    // Service Worker kaydı
+<script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/edeldepo/sw.js')
             .then(reg => console.log('Service Worker kaydedildi:', reg))

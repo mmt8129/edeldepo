@@ -1,5 +1,6 @@
 const CACHE_NAME = 'depo-cache-v1';
 const REPO_PATH = '/edeldepo';
+
 const urlsToCache = [
   REPO_PATH + '/',
   REPO_PATH + '/index.html',

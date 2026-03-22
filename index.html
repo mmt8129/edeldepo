@@ -7,282 +7,135 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1976D2">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f5f7fb;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .header {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: #1976D2;
-            padding: 20px 16px 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            text-align: center;
-            color: white;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        .header hr {
-            margin-top: 12px;
-            border: 0;
-            height: 2px;
-            background: white;
-            opacity: 0.3;
-        }
-
-        .search-area {
-            background: #f5f7fb;
-            padding: 16px 16px 8px 16px;
-            position: sticky;
-            top: 85px;
-            z-index: 10;
-        }
-
-        .search-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #1976D2;
-            margin-bottom: 6px;
-            margin-left: 4px;
-        }
-
-        .search-wrapper {
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 28px;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .search-input:focus {
-            border-color: #1976D2;
-            box-shadow: 0 4px 12px rgba(25,118,210,0.15);
-        }
-
-        .results-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 16px 80px 16px;
-            margin-top: 8px;
-        }
-
-        .part-card {
-            background: white;
-            border-radius: 20px;
-            margin-bottom: 16px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-            border: 1px solid #eef2f6;
-        }
-
-        .part-image {
-            width: 60px;
-            height: 60px;
-            background: #f0f2f5;
-            border-radius: 12px;
-            object-fit: cover;
-            flex-shrink: 0;
-            cursor: pointer;
-        }
-
-        .part-info {
-            flex: 1;
-        }
-
-        .part-name {
-            font-weight: 600;
-            font-size: 17px;
-            color: #1e2a3a;
-            margin-bottom: 6px;
-        }
-
-        .part-rack {
-            font-size: 14px;
-            font-weight: 500;
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: #eef2ff;
-            color: #1e40af;
-        }
-
-        .part-rack.out-of-stock {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .info-message {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6c757d;
-            font-size: 15px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-        .modal img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            border-radius: 12px;
-        }
-        .modal.show {
-            display: flex;
-        }
-
-        @media (max-width: 480px) {
-            .header h1 { font-size: 24px; }
-            .part-image { width: 55px; height: 55px; }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f7fb; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .header { position: sticky; top: 0; z-index: 10; background: #1976D2; padding: 20px 16px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .header h1 { text-align: center; color: white; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+        .header hr { margin-top: 12px; border: 0; height: 2px; background: white; opacity: 0.3; }
+        .search-area { background: #f5f7fb; padding: 16px 16px 8px 16px; position: sticky; top: 85px; z-index: 10; }
+        .search-label { display: block; font-size: 13px; font-weight: 500; color: #1976D2; margin-bottom: 6px; margin-left: 4px; }
+        .search-input { width: 100%; padding: 14px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 28px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05); outline: none; }
+        .search-input:focus { border-color: #1976D2; box-shadow: 0 4px 12px rgba(25,118,210,0.15); }
+        .results-container { flex: 1; overflow-y: auto; padding: 8px 16px 80px 16px; margin-top: 8px; }
+        .part-card { background: white; border-radius: 20px; margin-bottom: 16px; padding: 12px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #eef2f6; }
+        .part-image { width: 60px; height: 60px; background: #f0f2f5; border-radius: 12px; object-fit: cover; flex-shrink: 0; cursor: pointer; }
+        .part-info { flex: 1; }
+        .part-name { font-weight: 600; font-size: 17px; color: #1e2a3a; margin-bottom: 6px; }
+        .part-rack { font-size: 14px; font-weight: 500; display: inline-block; padding: 4px 10px; border-radius: 20px; background: #eef2ff; color: #1e40af; }
+        .part-rack.out-of-stock { background: #fee2e2; color: #b91c1c; }
+        .info-message { text-align: center; padding: 40px 20px; color: #6c757d; font-size: 15px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+        .modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 12px; }
+        .modal.show { display: flex; }
+        @media (max-width: 480px) { .header h1 { font-size: 24px; } .part-image { width: 55px; height: 55px; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>DEPO</h1>
-        <hr>
-    </div>
-
+    <div class="header"><h1>DEPO</h1><hr></div>
     <div class="search-area">
         <label class="search-label">🔍 Parça Ara</label>
-        <div class="search-wrapper">
-            <input type="text" id="searchInput" class="search-input" placeholder="Örnek: MX7, A1, HM5 ..." autocomplete="off">
-        </div>
+        <div class="search-wrapper"><input type="text" id="searchInput" class="search-input" placeholder="Örnek: MX7, A1, HM5 ..." autocomplete="off"></div>
     </div>
-
-    <div id="resultsContainer" class="results-container">
-        <div class="info-message">📦 Veri yükleniyor, lütfen bekleyin...</div>
-    </div>
-
-    <div id="imageModal" class="modal">
-        <img id="modalImage" src="" alt="Büyük resim">
-    </div>
+    <div id="resultsContainer" class="results-container"><div class="info-message">📦 Veri yükleniyor...</div></div>
+    <div id="imageModal" class="modal"><img id="modalImage" src="" alt="Büyük resim"></div>
 
     <script>
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('resultsContainer');
         const modal = document.getElementById('imageModal');
         const modalImg = document.getElementById('modalImage');
-
         let allParts = [];
         let isLoading = true;
 
-        modal.addEventListener('click', () => {
-            modal.classList.remove('show');
-        });
+        modal.addEventListener('click', () => modal.classList.remove('show'));
 
-        async function loadPartsFromHtml() {
+        async function loadParts() {
             try {
-                const response = await fetch('veri.html');
-                if (!response.ok) throw new Error('veri.html bulunamadı');
+                console.log('veri.html yükleniyor...');
+                const response = await fetch('veri.html?t=' + Date.now()); // cache önleme
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const htmlText = await response.text();
+                console.log('HTML alındı, uzunluk:', htmlText.length);
 
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
-                const rows = doc.querySelectorAll('tbody tr');
+                
+                // Daha esnek satır seçimi: önce tbody tr, yoksa table tr
+                let rows = doc.querySelectorAll('tbody tr');
+                if (rows.length === 0) {
+                    rows = doc.querySelectorAll('table tr');
+                    console.log('tbody bulunamadı, table tr kullanılıyor, satır:', rows.length);
+                }
+                if (rows.length === 0) {
+                    // Son çare: tüm tr'leri ara
+                    rows = doc.querySelectorAll('tr');
+                    console.log('table tr de yok, tüm trler deneniyor, satır:', rows.length);
+                }
                 console.log(`Toplam ${rows.length} satır bulundu.`);
 
                 allParts = [];
+                let parsedCount = 0;
 
                 for (let row of rows) {
                     const cells = row.querySelectorAll('td');
                     if (cells.length < 5) continue;
 
-                    // 1. hücre: resim
+                    // --- 1. RESİM ---
                     const imgTag = cells[0]?.querySelector('img');
                     const imageUrl = imgTag ? imgTag.getAttribute('src') : '';
 
-                    // 2. hücre: parça adı ve raf numarası
+                    // --- 2. PARÇA ADI VE RAF ---
                     const secondCell = cells[1];
                     const nameLink = secondCell?.querySelector('a');
                     let partName = nameLink ? nameLink.textContent.trim() : '';
+                    if (!partName) continue; // geçersiz satırı atla
                     
-                    // Raf numarasını al: &nbsp;'ten sonraki kısım
-                    let rackNumber = '';
-                    let isOutOfStock = false;
+                    // Raf numarası: link'ten sonraki tüm metin
+                    let rackRaw = '';
+                    if (secondCell) {
+                        // link'i kaldır, kalan metni al
+                        const clone = secondCell.cloneNode(true);
+                        const link = clone.querySelector('a');
+                        if (link) link.remove();
+                        rackRaw = clone.textContent.trim();
+                        // &nbsp; ve fazla boşlukları temizle
+                        rackRaw = rackRaw.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+                    }
                     
-                    // 2. hücrenin tüm metnini al, &nbsp; ve boşlukları temizle
-                    const fullSecondText = secondCell ? secondCell.textContent.trim() : '';
-                    // Parça adı linkte, geri kalan kısımda raf veya durum olabilir
-                    const afterLink = fullSecondText.replace(partName, '').trim();
-                    // &nbsp; varsa temizle ve kalanı al
-                    let rackRaw = afterLink.replace(/&nbsp;/g, '').trim();
-                    
-                    // 5. hücre: durum (Tasfiye/Üretimde)
+                    // --- 5. DURUM (Tasfiye/Üretimde) ---
                     const statusCell = cells[4] ? cells[4].textContent.trim() : '';
                     const isStatusOut = statusCell.includes('Tasfiye') || statusCell.includes('Üretimde') || statusCell === '';
-                    
-                    // Raf numarası kontrolü
+
+                    let rackNumber = 'Depoda yok';
+                    let isOutOfStock = true;
+
                     if (rackRaw !== '' && !isStatusOut) {
                         rackNumber = rackRaw;
                         isOutOfStock = false;
                     } else if (rackRaw !== '' && isStatusOut) {
-                        // Raf var ama durum tasfiye/üretimde -> depoda yok say
                         rackNumber = rackRaw;
                         isOutOfStock = true;
-                    } else {
-                        // Raf yok
-                        rackNumber = 'Depoda yok';
-                        isOutOfStock = true;
                     }
 
-                    if (partName && partName !== '') {
-                        allParts.push({
-                            ad: partName,
-                            resim: imageUrl,
-                            raf: rackNumber,
-                            stokDurumu: isOutOfStock ? 'yok' : 'var'
-                        });
-                    }
+                    allParts.push({
+                        ad: partName,
+                        resim: imageUrl,
+                        raf: rackNumber,
+                        stokDurumu: isOutOfStock ? 'yok' : 'var'
+                    });
+                    parsedCount++;
                 }
 
-                console.log(`${allParts.length} parça başarıyla yüklendi. Örnek:`, allParts.slice(0, 3));
+                console.log(`${parsedCount} parça başarıyla yüklendi. İlk 3:`, allParts.slice(0, 3));
                 isLoading = false;
                 performSearch();
+                
+                if (parsedCount === 0) {
+                    resultsContainer.innerHTML = `<div class="info-message">⚠️ Hiç parça bulunamadı. Lütfen veri.html dosyasının formatını kontrol edin.</div>`;
+                }
             } catch (error) {
                 console.error('Veri yüklenirken hata:', error);
-                resultsContainer.innerHTML = `<div class="info-message">⚠️ veri.html yüklenemedi. Dosyanın aynı klasörde olduğundan emin olun.</div>`;
+                resultsContainer.innerHTML = `<div class="info-message">⚠️ veri.html yüklenemedi: ${error.message}</div>`;
                 isLoading = false;
             }
         }
@@ -290,11 +143,7 @@
         function performSearch() {
             if (isLoading) return;
             const query = searchInput.value.trim().toLowerCase();
-            
-            let filtered = allParts;
-            if (query !== '') {
-                filtered = allParts.filter(part => part.ad.toLowerCase().includes(query));
-            }
+            let filtered = query === '' ? allParts : allParts.filter(p => p.ad.toLowerCase().includes(query));
 
             if (filtered.length === 0) {
                 resultsContainer.innerHTML = `<div class="info-message">🔍 "${searchInput.value}" ile eşleşen parça bulunamadı.</div>`;
@@ -304,16 +153,13 @@
             let html = '';
             for (let part of filtered) {
                 const rackClass = part.stokDurumu === 'yok' ? 'out-of-stock' : '';
-                const rackHtml = `<span class="part-rack ${rackClass}">${escapeHtml(part.raf)}</span>`;
-                
-                const imgSrc = part.resim && part.resim !== '' ? part.resim : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"%3E%3Cpath d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/%3E%3C/svg%3E';
-                
+                const imgSrc = part.resim || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"%3E%3Cpath d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/%3E%3C/svg%3E';
                 html += `
                     <div class="part-card">
                         <img class="part-image" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(part.ad)}" data-fullimg="${escapeHtml(part.resim)}">
                         <div class="part-info">
                             <div class="part-name">${escapeHtml(part.ad)}</div>
-                            ${rackHtml}
+                            <span class="part-rack ${rackClass}">${escapeHtml(part.raf)}</span>
                         </div>
                     </div>
                 `;
@@ -324,28 +170,19 @@
                 img.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const fullUrl = img.getAttribute('data-fullimg');
-                    if (fullUrl && fullUrl !== '' && !fullUrl.includes('data:image')) {
+                    if (fullUrl && !fullUrl.includes('data:image')) {
                         modalImg.src = fullUrl;
                         modal.classList.add('show');
                     } else {
-                        alert('Bu parçaya ait büyük resim bulunmuyor.');
+                        alert('Büyük resim bulunmuyor.');
                     }
                 });
             });
         }
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
         searchInput.addEventListener('input', performSearch);
-        loadPartsFromHtml();
+        loadParts();
     </script>
 </body>
 </html>

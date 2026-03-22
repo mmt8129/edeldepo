@@ -2,7 +2,7 @@
   "name": "Depo Raf Bulucu",
   "short_name": "DepoBul",
   "description": "Parça adına göre depo raf numarasını ve resmini bulur",
-  "start_url": "/",
+  "start_url": "/edeldepo/",
   "display": "standalone",
   "background_color": "#1976D2",
   "theme_color": "#1976D2",

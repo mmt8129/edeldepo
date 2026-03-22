@@ -12,11 +12,18 @@
         .header { position: sticky; top: 0; z-index: 10; background: #1976D2; padding: 20px 16px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .header h1 { text-align: center; color: white; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
         .header hr { margin-top: 12px; border: 0; height: 2px; background: white; opacity: 0.3; }
-        .search-area { background: #f5f7fb; padding: 16px 16px 8px 16px; position: sticky; top: 85px; z-index: 10; }
+        .stats { background: #f5f7fb; padding: 12px 16px 4px 16px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 13px; font-weight: 500; border-bottom: 1px solid #e2e8f0; }
+        .stat-card { background: white; padding: 6px 12px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-total { color: #1e40af; background: #eef2ff; }
+        .stat-instock { color: #15803d; background: #e0f2e7; }
+        .stat-outstock { color: #b91c1c; background: #fee2e2; }
+        .search-area { background: #f5f7fb; padding: 12px 16px 8px 16px; position: sticky; top: 115px; z-index: 10; }
         .search-label { display: block; font-size: 13px; font-weight: 500; color: #1976D2; margin-bottom: 6px; margin-left: 4px; }
-        .search-input { width: 100%; padding: 14px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 28px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05); outline: none; }
+        .search-wrapper { position: relative; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .search-input { flex: 1; padding: 14px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 28px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05); outline: none; }
         .search-input:focus { border-color: #1976D2; box-shadow: 0 4px 12px rgba(25,118,210,0.15); }
-        .results-container { flex: 1; overflow-y: auto; padding: 8px 16px 80px 16px; margin-top: 8px; }
+        .result-count-badge { background: #1976D2; color: white; padding: 8px 16px; border-radius: 28px; font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .results-container { flex: 1; overflow-y: auto; padding: 8px 16px 16px 16px; margin-top: 8px; }
         .part-card { background: white; border-radius: 20px; margin-bottom: 16px; padding: 12px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #eef2f6; }
         .part-image { width: 60px; height: 60px; background: #f0f2f5; border-radius: 12px; object-fit: cover; flex-shrink: 0; cursor: pointer; }
         .part-info { flex: 1; }
@@ -24,17 +31,27 @@
         .part-rack { font-size: 14px; font-weight: 500; display: inline-block; padding: 4px 10px; border-radius: 20px; background: #eef2ff; color: #1e40af; }
         .part-rack.out-of-stock { background: #fee2e2; color: #b91c1c; }
         .info-message { text-align: center; padding: 40px 20px; color: #6c757d; font-size: 15px; }
+        .load-more-btn { display: block; width: 100%; padding: 12px; margin: 16px 0 40px 0; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 40px; font-size: 15px; font-weight: 500; color: #1e293b; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .load-more-btn:hover { background: #e2e8f0; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
         .modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 12px; }
         .modal.show { display: flex; }
-        @media (max-width: 480px) { .header h1 { font-size: 24px; } .part-image { width: 55px; height: 55px; } }
+        @media (max-width: 480px) { .header h1 { font-size: 24px; } .part-image { width: 55px; height: 55px; } .stats { font-size: 11px; } .result-count-badge { font-size: 12px; padding: 6px 12px; } }
     </style>
 </head>
 <body>
     <div class="header"><h1>DEPO</h1><hr></div>
+    <div class="stats" id="statsArea">
+        <span class="stat-card stat-total" id="totalCount">📦 Toplam: -</span>
+        <span class="stat-card stat-instock" id="instockCount">✅ Depoda: -</span>
+        <span class="stat-card stat-outstock" id="outstockCount">⚠️ Tasfiye: -</span>
+    </div>
     <div class="search-area">
         <label class="search-label">🔍 Parça Ara</label>
-        <div class="search-wrapper"><input type="text" id="searchInput" class="search-input" placeholder="Örnek: MX7, A1, HM5 ..." autocomplete="off"></div>
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" class="search-input" placeholder="Örnek: MX7, A1, HM5 ..." autocomplete="off">
+            <span id="resultCountBadge" class="result-count-badge">0 sonuç</span>
+        </div>
     </div>
     <div id="resultsContainer" class="results-container"><div class="info-message">📦 Veri yükleniyor...</div></div>
     <div id="imageModal" class="modal"><img id="modalImage" src="" alt="Büyük resim"></div>
@@ -45,111 +62,40 @@
         const resultsContainer = document.getElementById('resultsContainer');
         const modal = document.getElementById('imageModal');
         const modalImg = document.getElementById('modalImage');
+        const resultCountBadge = document.getElementById('resultCountBadge');
+        const totalCountSpan = document.getElementById('totalCount');
+        const instockCountSpan = document.getElementById('instockCount');
+        const outstockCountSpan = document.getElementById('outstockCount');
+        
         let allParts = [];
         let isLoading = true;
+        let currentFiltered = [];
+        let currentDisplayLimit = 10;
 
         modal.addEventListener('click', () => modal.classList.remove('show'));
 
-        async function loadParts() {
-            try {
-                console.log('veri.html yükleniyor (RAW):', VERI_URL);
-                const response = await fetch(VERI_URL + '?t=' + Date.now());
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const htmlText = await response.text();
-                console.log('HTML alındı, uzunluk:', htmlText.length);
-
-                // --- Regex ile tüm  <tr> satırlarını yakala (tbody içindekiler) ---
-                // Önce tüm tablo satırlarını yakalayan bir regex
-                const rowRegex = /<tr>([\s\S]*?)<\/tr>/gi;
-                let match;
-                let parsedCount = 0;
-                allParts = [];
-
-                while ((match = rowRegex.exec(htmlText)) !== null) {
-                    const rowContent = match[1];
-                    
-                    // Resim URL'sini yakala (img src)
-                    let imgSrc = '';
-                    const imgRegex = /<img[^>]+src=["']([^"']+)["']/i;
-                    const imgMatch = imgRegex.exec(rowContent);
-                    if (imgMatch) imgSrc = imgMatch[1];
-                    
-                    // Parça adı: <a href=...>PARÇAADI</a> kısmı
-                    let partName = '';
-                    const nameRegex = /<a[^>]*>([^<]+)<\/a>/i;
-                    const nameMatch = nameRegex.exec(rowContent);
-                    if (nameMatch) partName = nameMatch[1].trim();
-                    
-                    // Raf numarası: linkten sonra gelen &nbsp; ve ardındaki kod
-                    let rackRaw = '';
-                    // Linkten sonra &nbsp; ve devamını bul
-                    const rackRegex = /<\/a>\s*&nbsp;\s*([^<]+)/i;
-                    const rackMatch = rackRegex.exec(rowContent);
-                    if (rackMatch) rackRaw = rackMatch[1].trim();
-                    
-                    // Durum bilgisi (Tasfiye/Üretimde) - 5. hücre (genellikle sondan bir önceki td)
-                    let statusText = '';
-                    const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
-                    let tdMatches = [];
-                    let tdMatch;
-                    while ((tdMatch = tdRegex.exec(rowContent)) !== null) {
-                        tdMatches.push(tdMatch[1]);
-                    }
-                    // 5. hücre (index 4) durum bilgisini içeriyor
-                    if (tdMatches.length >= 5) {
-                        statusText = tdMatches[4].replace(/<[^>]*>/g, '').trim();
-                    }
-                    
-                    const isStatusOut = statusText.includes('Tasfiye') || statusText.includes('Üretimde') || statusText === '';
-                    
-                    let rackNumber = 'Depoda yok';
-                    let isOutOfStock = true;
-                    
-                    if (rackRaw && !isStatusOut) {
-                        rackNumber = rackRaw;
-                        isOutOfStock = false;
-                    } else if (rackRaw && isStatusOut) {
-                        rackNumber = rackRaw;
-                        isOutOfStock = true;
-                    }
-                    
-                    if (partName) {
-                        allParts.push({
-                            ad: partName,
-                            resim: imgSrc,
-                            raf: rackNumber,
-                            stokDurumu: isOutOfStock ? 'yok' : 'var'
-                        });
-                        parsedCount++;
-                    }
-                }
-                
-                console.log(`${parsedCount} parça başarıyla yüklendi. İlk 3:`, allParts.slice(0, 3));
-                isLoading = false;
-                performSearch();
-                
-                if (parsedCount === 0) {
-                    resultsContainer.innerHTML = `<div class="info-message">⚠️ Hiç parça bulunamadı. Lütfen veri.html dosyasının formatını kontrol edin.</div>`;
-                }
-            } catch (error) {
-                console.error('Veri yüklenirken hata:', error);
-                resultsContainer.innerHTML = `<div class="info-message">⚠️ veri.html yüklenemedi: ${error.message}</div>`;
-                isLoading = false;
-            }
+        function updateStats() {
+            const total = allParts.length;
+            const instock = allParts.filter(p => p.stokDurumu === 'var').length;
+            const outstock = total - instock;
+            totalCountSpan.innerHTML = `📦 Toplam: ${total}`;
+            instockCountSpan.innerHTML = `✅ Depoda: ${instock}`;
+            outstockCountSpan.innerHTML = `⚠️ Tasfiye: ${outstock}`;
         }
 
-        function performSearch() {
-            if (isLoading) return;
-            const query = searchInput.value.trim().toLowerCase();
-            let filtered = query === '' ? allParts : allParts.filter(p => p.ad.toLowerCase().includes(query));
-
-            if (filtered.length === 0) {
+        function displayFilteredResults() {
+            if (currentFiltered.length === 0) {
                 resultsContainer.innerHTML = `<div class="info-message">🔍 "${searchInput.value}" ile eşleşen parça bulunamadı.</div>`;
+                resultCountBadge.textContent = `0 sonuç`;
                 return;
             }
-
+            
+            resultCountBadge.textContent = `${currentFiltered.length} sonuç`;
+            const showCount = Math.min(currentDisplayLimit, currentFiltered.length);
+            const showItems = currentFiltered.slice(0, showCount);
+            
             let html = '';
-            for (let part of filtered) {
+            for (let part of showItems) {
                 const rackClass = part.stokDurumu === 'yok' ? 'out-of-stock' : '';
                 const imgSrc = part.resim || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"%3E%3Cpath d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/%3E%3C/svg%3E';
                 html += `
@@ -162,8 +108,21 @@
                     </div>
                 `;
             }
+            
+            if (currentDisplayLimit < currentFiltered.length) {
+                html += `<button id="loadMoreBtn" class="load-more-btn">+ Daha fazla göster (${currentFiltered.length - currentDisplayLimit} kaldı)</button>`;
+            }
+            
             resultsContainer.innerHTML = html;
-
+            
+            const newBtn = document.getElementById('loadMoreBtn');
+            if (newBtn) {
+                newBtn.addEventListener('click', () => {
+                    currentDisplayLimit += 10;
+                    displayFilteredResults();
+                });
+            }
+            
             document.querySelectorAll('.part-image').forEach(img => {
                 img.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -178,7 +137,93 @@
             });
         }
 
+        function performSearch() {
+            if (isLoading) return;
+            const query = searchInput.value.trim().toLowerCase();
+            currentFiltered = query === '' ? allParts : allParts.filter(p => p.ad.toLowerCase().includes(query));
+            currentDisplayLimit = 10;
+            displayFilteredResults();
+        }
+
+        async function loadParts() {
+            try {
+                const response = await fetch(VERI_URL + '?t=' + Date.now());
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const htmlText = await response.text();
+
+                const rowRegex = /<tr>([\s\S]*?)<\/tr>/gi;
+                let match;
+                allParts = [];
+
+                while ((match = rowRegex.exec(htmlText)) !== null) {
+                    const rowContent = match[1];
+                    
+                    let imgSrc = '';
+                    const imgRegex = /<img[^>]+src=["']([^"']+)["']/i;
+                    const imgMatch = imgRegex.exec(rowContent);
+                    if (imgMatch) imgSrc = imgMatch[1];
+                    
+                    let partName = '';
+                    const nameRegex = /<a[^>]*>([^<]+)<\/a>/i;
+                    const nameMatch = nameRegex.exec(rowContent);
+                    if (nameMatch) partName = nameMatch[1].trim();
+                    if (!partName) continue;
+                    
+                    let rackRaw = '';
+                    const rackRegex = /<\/a>\s*&nbsp;\s*([^<]+)/i;
+                    const rackMatch = rackRegex.exec(rowContent);
+                    if (rackMatch) rackRaw = rackMatch[1].trim();
+                    
+                    let statusText = '';
+                    const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+                    let tdIndex = 0;
+                    let tdMatch;
+                    while ((tdMatch = tdRegex.exec(rowContent)) !== null) {
+                        if (tdIndex === 4) {
+                            statusText = tdMatch[1].replace(/<[^>]*>/g, '').trim();
+                            break;
+                        }
+                        tdIndex++;
+                    }
+                    
+                    const isStatusOut = statusText.includes('Tasfiye') || statusText.includes('Üretimde') || statusText === '';
+                    
+                    let rackNumber = 'TASFİYE';
+                    let isOutOfStock = true;
+                    
+                    if (rackRaw && !isStatusOut) {
+                        rackNumber = rackRaw;
+                        isOutOfStock = false;
+                    } else if (rackRaw && isStatusOut) {
+                        rackNumber = rackRaw;
+                        isOutOfStock = true;
+                    }
+                    
+                    allParts.push({
+                        ad: partName,
+                        resim: imgSrc,
+                        raf: rackNumber,
+                        stokDurumu: isOutOfStock ? 'yok' : 'var'
+                    });
+                }
+                
+                console.log(`${allParts.length} parça yüklendi`);
+                isLoading = false;
+                updateStats();
+                performSearch();
+                
+                if (allParts.length === 0) {
+                    resultsContainer.innerHTML = `<div class="info-message">⚠️ Hiç parça bulunamadı.</div>`;
+                }
+            } catch (error) {
+                console.error('Hata:', error);
+                resultsContainer.innerHTML = `<div class="info-message">⚠️ veri.html yüklenemedi: ${error.message}</div>`;
+                isLoading = false;
+            }
+        }
+
         function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+        
         searchInput.addEventListener('input', performSearch);
         loadParts();
     </script>

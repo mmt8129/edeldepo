@@ -231,10 +231,17 @@
 <script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/edeldepo/sw.js')
-            .then(reg => console.log('Service Worker kaydedildi:', reg))
-            .catch(err => console.log('Service Worker hatası:', err));
+            .then(reg => {
+                console.log('✅ SW kayıtlı:', reg);
+                reg.update();
+            })
+            .catch(err => console.log('❌ SW hatası:', err));
+        
+        // SW aktif mi kontrol et
+        navigator.serviceWorker.ready.then(() => {
+            console.log('🎯 SW aktif ve hazır');
+        });
     }
 </script>
-    
 </body>
 </html>

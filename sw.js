@@ -1,9 +1,9 @@
 const CACHE_NAME = 'depo-cache-v1';
+const REPO_PATH = '/edeldepo';
 const urlsToCache = [
-  '/edeldepo/',
-  '/edeldepo/index.html',
-  '/edeldepo/veri.html',
-  '/edeldepo/manifest.json'
+  REPO_PATH + '/',
+  REPO_PATH + '/index.html',
+  REPO_PATH + '/manifest.json',
 ];
 
 self.addEventListener('install', event => {

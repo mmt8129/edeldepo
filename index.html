@@ -40,9 +40,7 @@
     <div id="imageModal" class="modal"><img id="modalImage" src="" alt="Büyük resim"></div>
 
     <script>
-        // ⚠️ BURAYA KENDİ RAW URL'NİZİ YAPIŞTIRIN ⚠️
-        const VERI_URL = 'https://raw.githubusercontent.com/mmt8129/edeldepo/refs/heads/main/veri.html';
-        
+        const VERI_URL = 'https://raw.githubusercontent.com/mmt8129/edeldepo/main/veri.html';
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('resultsContainer');
         const modal = document.getElementById('imageModal');
@@ -59,68 +57,79 @@
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const htmlText = await response.text();
                 console.log('HTML alındı, uzunluk:', htmlText.length);
-                console.log('İlk 300 karakter:', htmlText.substring(0, 300));
 
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
-                
-                let rows = doc.querySelectorAll('tbody tr');
-                if (rows.length === 0) rows = doc.querySelectorAll('table tr');
-                if (rows.length === 0) rows = doc.querySelectorAll('tr');
-                console.log(`Toplam ${rows.length} satır bulundu.`);
-
-                allParts = [];
+                // --- Regex ile tüm  <tr> satırlarını yakala (tbody içindekiler) ---
+                // Önce tüm tablo satırlarını yakalayan bir regex
+                const rowRegex = /<tr>([\s\S]*?)<\/tr>/gi;
+                let match;
                 let parsedCount = 0;
+                allParts = [];
 
-                for (let row of rows) {
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length < 5) continue;
-
-                    const imgTag = cells[0]?.querySelector('img');
-                    const imageUrl = imgTag ? imgTag.getAttribute('src') : '';
+                while ((match = rowRegex.exec(htmlText)) !== null) {
+                    const rowContent = match[1];
                     
-                    const secondCell = cells[1];
-                    const nameLink = secondCell?.querySelector('a');
-                    let partName = nameLink ? nameLink.textContent.trim() : '';
-                    if (!partName) continue;
+                    // Resim URL'sini yakala (img src)
+                    let imgSrc = '';
+                    const imgRegex = /<img[^>]+src=["']([^"']+)["']/i;
+                    const imgMatch = imgRegex.exec(rowContent);
+                    if (imgMatch) imgSrc = imgMatch[1];
                     
+                    // Parça adı: <a href=...>PARÇAADI</a> kısmı
+                    let partName = '';
+                    const nameRegex = /<a[^>]*>([^<]+)<\/a>/i;
+                    const nameMatch = nameRegex.exec(rowContent);
+                    if (nameMatch) partName = nameMatch[1].trim();
+                    
+                    // Raf numarası: linkten sonra gelen &nbsp; ve ardındaki kod
                     let rackRaw = '';
-                    if (secondCell) {
-                        const clone = secondCell.cloneNode(true);
-                        const link = clone.querySelector('a');
-                        if (link) link.remove();
-                        rackRaw = clone.textContent.trim().replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+                    // Linkten sonra &nbsp; ve devamını bul
+                    const rackRegex = /<\/a>\s*&nbsp;\s*([^<]+)/i;
+                    const rackMatch = rackRegex.exec(rowContent);
+                    if (rackMatch) rackRaw = rackMatch[1].trim();
+                    
+                    // Durum bilgisi (Tasfiye/Üretimde) - 5. hücre (genellikle sondan bir önceki td)
+                    let statusText = '';
+                    const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+                    let tdMatches = [];
+                    let tdMatch;
+                    while ((tdMatch = tdRegex.exec(rowContent)) !== null) {
+                        tdMatches.push(tdMatch[1]);
+                    }
+                    // 5. hücre (index 4) durum bilgisini içeriyor
+                    if (tdMatches.length >= 5) {
+                        statusText = tdMatches[4].replace(/<[^>]*>/g, '').trim();
                     }
                     
-                    const statusCell = cells[4] ? cells[4].textContent.trim() : '';
-                    const isStatusOut = statusCell.includes('Tasfiye') || statusCell.includes('Üretimde') || statusCell === '';
-
+                    const isStatusOut = statusText.includes('Tasfiye') || statusText.includes('Üretimde') || statusText === '';
+                    
                     let rackNumber = 'Depoda yok';
                     let isOutOfStock = true;
-
-                    if (rackRaw !== '' && !isStatusOut) {
+                    
+                    if (rackRaw && !isStatusOut) {
                         rackNumber = rackRaw;
                         isOutOfStock = false;
-                    } else if (rackRaw !== '' && isStatusOut) {
+                    } else if (rackRaw && isStatusOut) {
                         rackNumber = rackRaw;
                         isOutOfStock = true;
                     }
-
-                    allParts.push({
-                        ad: partName,
-                        resim: imageUrl,
-                        raf: rackNumber,
-                        stokDurumu: isOutOfStock ? 'yok' : 'var'
-                    });
-                    parsedCount++;
+                    
+                    if (partName) {
+                        allParts.push({
+                            ad: partName,
+                            resim: imgSrc,
+                            raf: rackNumber,
+                            stokDurumu: isOutOfStock ? 'yok' : 'var'
+                        });
+                        parsedCount++;
+                    }
                 }
-
+                
                 console.log(`${parsedCount} parça başarıyla yüklendi. İlk 3:`, allParts.slice(0, 3));
                 isLoading = false;
                 performSearch();
                 
                 if (parsedCount === 0) {
-                    resultsContainer.innerHTML = `<div class="info-message">⚠️ Hiç parça bulunamadı. HTML içinde <tr> etiketi var mı? İlk 300 karakteri console'da kontrol edin.</div>`;
+                    resultsContainer.innerHTML = `<div class="info-message">⚠️ Hiç parça bulunamadı. Lütfen veri.html dosyasının formatını kontrol edin.</div>`;
                 }
             } catch (error) {
                 console.error('Veri yüklenirken hata:', error);

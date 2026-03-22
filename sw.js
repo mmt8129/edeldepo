@@ -1,9 +1,10 @@
-const CACHE_NAME = 'depo-raf-v1';
+const CACHE_NAME = 'depo-raf-v2';
 const urlsToCache = [
   '/edeldepo/',
   '/edeldepo/index.html',
   '/edeldepo/veri.html',
-  '/edeldepo/manifest.json'
+  '/edeldepo/manifest.json',
+  '/edeldepo/sw.js'
 ];
 
 self.addEventListener('install', event => {
@@ -13,7 +14,7 @@ self.addEventListener('install', event => {
         console.log('Cache açıldı');
         return cache.addAll(urlsToCache);
       })
-      .catch(err => console.log('Cache hatası:', err))
+      .catch(err => console.error('Cache hatası:', err))
   );
   self.skipWaiting();
 });
@@ -27,11 +28,21 @@ self.addEventListener('fetch', event => {
         }
         return fetch(event.request);
       })
-      .catch(() => new Response('Ağ hatası', { status: 404 }))
   );
 });
 
 self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
   event.waitUntil(clients.claim());
-  console.log('Service Worker aktif');
+  console.log('SW aktif ve kontrolü aldı');
 });
